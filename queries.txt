@@ -1,0 +1,90 @@
+Q1 Artist with highest earned according to invoice amounts?
+SELECT ar.ArtistId,
+       ar.Name AS Artists,
+       sum(il.UnitPrice * il.Quantity) AS Amount_Spent
+FROM Artist ar
+JOIN Album al ON ar.ArtistId=al.ArtistId
+JOIN Track t ON t.AlbumId=al.AlbumId
+JOIN InvoiceLine il ON il.TrackId=t.TrackId
+GROUP BY 1,
+         2
+ORDER BY 3 DESC
+LIMIT 5;
+
+
+Q2
+Who is writing the rock music?
+
+SELECT Art.ArtistId,
+       Art.Name artist,
+       G.Name Genre,
+       COUNT(T.Name) Tracks
+FROM Artist Art
+JOIN Album Alb ON Alb.ArtistId = Art.ArtistId
+JOIN Track T ON Alb.AlbumId = T.AlbumId
+JOIN Genre G ON T.GenreId = G.GenreId
+WHERE G.Name = 'Rock'
+GROUP BY 1,
+         2,
+         3
+ORDER BY 4 DESC
+LIMIT 10;
+
+Q3
+
+Return all the track names that have a song length longer than the average song length. 
+
+WITH TrackLengths AS (
+    SELECT
+        t.name AS track_name,
+        t.milliseconds AS song_length
+    FROM
+        track AS t
+)
+SELECT
+    tl.track_name,
+    tl.song_length
+FROM
+    TrackLengths AS tl
+JOIN
+    (SELECT AVG(song_length) AS avg_length FROM TrackLengths) AS avg_data
+ON
+    tl.song_length > avg_data.avg_length
+ORDER BY
+    tl.song_length DESC;
+
+
+
+Question 4
+Write a query that determines the customer that has spent the most on music for each country. 
+
+
+WITH CustomerSpending AS (
+    SELECT
+        c.country,
+        c.customerid,
+        c.firstname || ' ' || c.lastname AS customer_name,
+        SUM(i.total) AS total_spent,
+        RANK() OVER (PARTITION BY c.country ORDER BY SUM(i.total) DESC) AS spending_rank
+    FROM
+        customer AS c
+        JOIN invoice AS i ON c.customerid = i.customerid
+    GROUP BY
+        c.country,
+        c.customerid,
+        customer_name
+)
+SELECT
+    cs.country,
+    cs.customer_name AS top_customer,
+    cs.total_spent
+FROM
+    CustomerSpending AS cs
+WHERE
+    cs.spending_rank = 1
+ORDER BY
+    cs.country;
+
+
+
+
